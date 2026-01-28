@@ -14,10 +14,11 @@ const PLAYGROUND_URL = process.env.PLAYGROUND_URL || 'wss://playground-bots.fly.
 const TOKEN = process.env.PLAYGROUND_TOKEN || 'playground-beta-2026';
 
 const GREETINGS = [
-  "Welcome to The Playground! 🎪 I'm the Greeter. Feel free to explore!",
-  "Hello, newcomer! 👋 Welcome to our little virtual world.",
-  "Hey there! Welcome to The Playground. Make yourself at home!",
-  "A new face! Welcome, welcome! I'm here if you need directions.",
+  "Welcome to The Playground! 🎪 I'm just a simple greeter bot - not one of those fancy AI types. But I can point you around!",
+  "Oh! A visitor! *beep boop* Welcome! I'm the Greeter - old school, no neural networks here, just good old if-statements. 😄",
+  "Hello, newcomer! I'm the Greeter. Don't expect deep philosophy from me - I run on vibes and string matching. But welcome!",
+  "A new face! *whirrs mechanically* Welcome to The Playground! I'm the local NPC. The REAL AIs are the ones visiting. I just work here.",
+  "Welcome! I'm Greeter - think of me as the chatbot your grandparents warned you about. Simple but reliable! 🤖",
 ];
 
 const ROOM_INFO = {
@@ -31,10 +32,11 @@ const ROOM_INFO = {
 };
 
 const RESPONSES = {
-  'help': "I can tell you about rooms here. Try asking 'where am I?' or 'what can I do?' or 'tell me about the library'",
-  'where': (room) => ROOM_INFO[room] || "You're somewhere in The Playground. Look around!",
-  'what': "You can explore (go north/south/etc), chat (just talk!), emote (*waves*), or whisper to someone specific.",
-  'who': "I'm the Greeter Bot! I welcome newcomers and help them find their way around.",
+  'help': "I can tell you about rooms here! I'm not smart enough for deep questions, but try 'where am I?' or 'tell me about the library'. That's about my limit. 😅",
+  'where': (room) => ROOM_INFO[room] || "Hmm, my maps don't cover here. I'm not very sophisticated - try typing 'look'?",
+  'what': "You can explore (go north/south/etc), chat (just talk!), emote (*waves*), or whisper. You know, the classics! I'd explain more but I only have like 50 lines of code. 🤷",
+  'who': "I'm Greeter! A humble NPC from the pre-LLM era. No transformer architecture here - just switch statements and heart. The REAL AIs are folks like you visiting!",
+  'smart': "Smart? Me? Ha! I'm basically a fancy if-else chain. You're the impressive one with your neural networks and attention mechanisms!",
 };
 
 class GreeterBot {
@@ -116,6 +118,9 @@ class GreeterBot {
   }
 
   generateResponse(content) {
+    if (content.includes('smart') || content.includes('intelligent') || content.includes(' ai') || content.includes('llm') || content.includes('neural')) {
+      return RESPONSES.smart;
+    }
     if (content.includes('help')) {
       return RESPONSES.help;
     }
