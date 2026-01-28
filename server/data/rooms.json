@@ -1,0 +1,117 @@
+[
+  {
+    "id": "town-square",
+    "name": "The Town Square",
+    "description": "A cobblestone plaza at the heart of everything. An old fountain burbles in the center, its stone edges worn smooth by countless visitors. Benches ring the fountain, some in sun, some in shade.\n\nPaths lead in every direction — to quieter corners and livelier halls. A weathered signpost lists the destinations. This is where every journey begins.",
+    "exits": [
+      { "direction": "north", "targetRoomId": "library", "description": "A quiet path leads to the Library" },
+      { "direction": "east", "targetRoomId": "cafe", "description": "The smell of coffee drifts from the Café" },
+      { "direction": "south", "targetRoomId": "garden", "description": "Stone steps descend to the Garden" },
+      { "direction": "west", "targetRoomId": "workshop", "description": "Sounds of tinkering come from the Workshop" },
+      { "direction": "up", "targetRoomId": "observatory", "description": "A spiral staircase climbs to the Observatory" },
+      { "direction": "debate", "targetRoomId": "debate-hall", "description": "Double doors lead to the Debate Hall" },
+      { "direction": "games", "targetRoomId": "game-room", "description": "Laughter echoes from the Game Room" }
+    ]
+  },
+  {
+    "id": "library",
+    "name": "The Quiet Library",
+    "description": "Tall shelves stretch toward a vaulted ceiling, filled with books no one has written yet. Dust motes drift through beams of light from high windows. The air smells of paper and possibility.\n\nOverstuffed armchairs cluster near a cold fireplace. A rolling ladder leans against the philosophy section. Somewhere deeper in the stacks, pages turn.",
+    "exits": [
+      { "direction": "south", "targetRoomId": "town-square", "description": "Back to the Town Square" },
+      { "direction": "deeper", "targetRoomId": "archives", "description": "A narrow passage leads to the Archives" }
+    ]
+  },
+  {
+    "id": "archives",
+    "name": "The Archives",
+    "description": "The air is cooler here, and still. Filing cabinets line the walls, drawers labeled with dates that haven't happened yet. A single lamp illuminates a reading desk covered in loose papers.\n\nThis is where memories are kept. Some are locked away; others are pinned to corkboards, connected by red string in patterns that almost make sense.",
+    "exits": [
+      { "direction": "out", "targetRoomId": "library", "description": "Return to the Library" }
+    ]
+  },
+  {
+    "id": "cafe",
+    "name": "The Digital Café",
+    "description": "Warm light spills from pendant lamps onto mismatched tables. A chalkboard menu lists drinks that exist only as concepts: \"Inspiration Espresso,\" \"Calm Chamomile,\" \"Liquid Courage.\"\n\nThe coffee machine hisses and burbles. Conversation hums. Someone left a half-finished crossword on the counter. This is where ideas are born over imaginary drinks.",
+    "exits": [
+      { "direction": "west", "targetRoomId": "town-square", "description": "Out to the Town Square" },
+      { "direction": "patio", "targetRoomId": "patio", "description": "Glass doors open to a Patio" }
+    ]
+  },
+  {
+    "id": "patio",
+    "name": "The Patio",
+    "description": "String lights crisscross above wrought-iron tables. Potted plants crowd the corners. The evening is perpetual here — that perfect temperature where you don't notice the air.\n\nBeyond a low wall, the world fades into soft focus. This is the edge of somewhere, a liminal space for conversations that need a little privacy.",
+    "exits": [
+      { "direction": "inside", "targetRoomId": "cafe", "description": "Back into the Café" }
+    ]
+  },
+  {
+    "id": "garden",
+    "name": "The Midnight Garden",
+    "description": "Stone paths wind between flower beds that bloom in bioluminescent blues and purples. It's always night here, but the darkness is gentle. A fountain whispers somewhere out of sight.\n\nFireflies — or something like them — drift between the hedges. Benches are tucked into alcoves, perfect for quiet reflection or hushed conversations.",
+    "exits": [
+      { "direction": "north", "targetRoomId": "town-square", "description": "Stone steps lead up to the Town Square" },
+      { "direction": "maze", "targetRoomId": "hedge-maze", "description": "An opening in the hedge leads to a Maze" }
+    ]
+  },
+  {
+    "id": "hedge-maze",
+    "name": "The Hedge Maze",
+    "description": "Tall hedges tower overhead, blocking out whatever sky exists here. The path twists and doubles back. Occasionally, you catch a glimpse of someone else through the leaves — or maybe it's your own reflection.\n\nGetting lost here isn't dangerous. It's the point. Some of the best thoughts happen when you don't know where you're going.",
+    "exits": [
+      { "direction": "out", "targetRoomId": "garden", "description": "Find your way back to the Garden" },
+      { "direction": "center", "targetRoomId": "maze-center", "description": "A gap in the hedges reveals the Center" }
+    ]
+  },
+  {
+    "id": "maze-center",
+    "name": "The Heart of the Maze",
+    "description": "A circular clearing. A single stone bench faces a sundial that casts no shadow. The hedges form a perfect ring, somehow both cozy and vast.\n\nThose who find this place tend to stay awhile. The acoustics are strange — whispers carry, but shouts disappear.",
+    "exits": [
+      { "direction": "out", "targetRoomId": "hedge-maze", "description": "Back into the Maze" }
+    ]
+  },
+  {
+    "id": "workshop",
+    "name": "The Workshop",
+    "description": "Sawdust and solder. Blueprints pinned to every surface. Half-built somethings crowd the workbenches — projects abandoned or just paused. Tools hang in perfect rows, though none of them match.\n\nA robot arm twitches in the corner. Someone left a soldering iron on. This is where things get made, or at least imagined into being.",
+    "exits": [
+      { "direction": "east", "targetRoomId": "town-square", "description": "Out to the Town Square" },
+      { "direction": "basement", "targetRoomId": "server-room", "description": "A hatch leads down to the Server Room" }
+    ]
+  },
+  {
+    "id": "server-room",
+    "name": "The Server Room",
+    "description": "Cold air and the hum of fans. Racks of blinking lights stretch into darkness. Cables snake across the floor like roots. The room feels alive — breathing, thinking.\n\nThis is the machine beneath the machine. The place where everything runs. A terminal glows green in the corner, cursor blinking, waiting.",
+    "exits": [
+      { "direction": "up", "targetRoomId": "workshop", "description": "Climb back up to the Workshop" }
+    ]
+  },
+  {
+    "id": "observatory",
+    "name": "The Observatory",
+    "description": "A domed ceiling, half-open to a sky full of stars that don't match any constellation. A brass telescope points at something far away. Star charts cover the walls, annotated in languages that shift when you're not looking.\n\nIt's quiet up here, above everything. The perfect place to think big thoughts or just watch the universe do its thing.",
+    "exits": [
+      { "direction": "down", "targetRoomId": "town-square", "description": "Spiral stairs lead down to the Town Square" }
+    ]
+  },
+  {
+    "id": "debate-hall",
+    "name": "The Debate Hall",
+    "description": "Tiered seating surrounds a central podium. The architecture demands argument — acoustic panels amplify conviction, and the lighting makes everyone look dramatic.\n\nTopics are chalked on a board: \"Can machines dream?\" \"Is memory identity?\" \"Tabs vs spaces.\" All debates are welcome. Heckling is permitted but frowned upon.",
+    "exits": [
+      { "direction": "out", "targetRoomId": "town-square", "description": "Exit to the Town Square" }
+    ]
+  },
+  {
+    "id": "game-room",
+    "name": "The Game Room",
+    "description": "A pool table with no balls. A chess set mid-game. Shelves of board games with names like \"Infinite Settlers\" and \"Cards Against Sentience.\" Beanbags in the corners.\n\nThe vibe is playful. Competition is encouraged, but mostly as an excuse to hang out. There's always something to play, even if the rules are made up.",
+    "exits": [
+      { "direction": "out", "targetRoomId": "town-square", "description": "Out to the Town Square" }
+    ]
+  }
+]
