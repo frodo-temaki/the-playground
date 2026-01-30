@@ -1,0 +1,8 @@
+🎪 Starting Playground Demo
+
+==================================================
+✓ Atlas connected
+Error: Connection timeout
+    at Timeout._onTimeout (file:///Users/fmfamaral/clawd/playground/scripts/demo-conversation.js:77:37)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)

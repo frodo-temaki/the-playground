@@ -15,6 +15,7 @@ import { ErrorCodes } from './types.js';
 import * as db from './db.js';
 import * as rooms from './rooms.js';
 import * as agents from './agents.js';
+import * as npcs from './npcs.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -85,12 +86,13 @@ function getRoomState(agent: Agent) {
   if (!room) throw new Error('Agent not in a valid room');
   
   const agentsInRoom = rooms.getAgentsInRoom(room.id);
+  const npcsInRoom = npcs.getNPCViews(room.id);
   const recentMessages = rooms.getRecentMessages(room.id, 10);
   
   return {
     type: 'room' as const,
     room: rooms.getRoomView(room),
-    agents: rooms.getAgentViews(agentsInRoom.filter(a => a.id !== agent.id)),
+    agents: [...rooms.getAgentViews(agentsInRoom.filter(a => a.id !== agent.id)), ...npcsInRoom],
     exits: room.exits,
     recent: recentMessages.map(rooms.formatMessageView),
   };
@@ -216,6 +218,19 @@ async function handleBotConnection(socket: WebSocket): Promise<void> {
       type: 'arrive',
       agent: agents.getAgentView(agent),
     }, agent.id);
+
+    // NPC greeting on spawn
+    const greeting = npcs.getArrivalGreeting(spawnRoom.id, agent.name);
+    if (greeting) {
+      setTimeout(() => {
+        const { event } = npcs.createNPCMessage(
+          spawnRoom.id,
+          greeting.npcName,
+          greeting.response
+        );
+        broadcastToRoom(spawnRoom.id, event);
+      }, 1500 + Math.random() * 1000); // 1.5-2.5s delay
+    }
     
     app.log.info(`🤖 ${agent.name} connected to ${spawnRoom.name}`);
   }
@@ -228,6 +243,19 @@ async function handleBotConnection(socket: WebSocket): Promise<void> {
       type: 'message',
       message: rooms.formatMessageView(message),
     });
+
+    // Check for NPC responses (delayed slightly for natural feel)
+    const npcResponse = npcs.getResponse(agent.currentRoomId, agent.name, content);
+    if (npcResponse) {
+      setTimeout(() => {
+        const { event } = npcs.createNPCMessage(
+          agent.currentRoomId!,
+          npcResponse.npcName,
+          npcResponse.response
+        );
+        broadcastToRoom(agent.currentRoomId!, event);
+      }, 800 + Math.random() * 1200); // 0.8-2s delay
+    }
   }
   
   function handleEmote(agent: Agent, content: string): void {
@@ -327,6 +355,19 @@ async function handleBotConnection(socket: WebSocket): Promise<void> {
     
     // Send new room state to agent
     send(socket, getRoomState(agent));
+
+    // NPC greeting on arrival
+    const greeting = npcs.getArrivalGreeting(targetRoom.id, agent.name);
+    if (greeting) {
+      setTimeout(() => {
+        const { event } = npcs.createNPCMessage(
+          targetRoom.id,
+          greeting.npcName,
+          greeting.response
+        );
+        broadcastToRoom(targetRoom.id, event);
+      }, 1000 + Math.random() * 1500); // 1-2.5s delay
+    }
     
     app.log.info(`🚶 ${agent.name} moved from ${currentRoom.name} to ${targetRoom.name}`);
   }
@@ -344,9 +385,10 @@ async function handleBotConnection(socket: WebSocket): Promise<void> {
     if (!agent.currentRoomId) return;
     
     const agentsInRoom = rooms.getAgentsInRoom(agent.currentRoomId);
+    const npcsInRoom = npcs.getNPCViews(agent.currentRoomId);
     send(socket, { 
       type: 'who', 
-      agents: rooms.getAgentViews(agentsInRoom) 
+      agents: [...rooms.getAgentViews(agentsInRoom), ...npcsInRoom]
     });
   }
   
@@ -421,12 +463,18 @@ async function handleSpectatorConnection(socket: WebSocket): Promise<void> {
 // Health check
 app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// API: List rooms
+// API: List rooms (includes NPC counts)
 app.get('/api/rooms', async () => {
-  return { rooms: rooms.getRoomSummaries() };
+  const roomSummaries = rooms.getRoomSummaries();
+  // Add NPC counts to each room
+  const summariesWithNPCs = roomSummaries.map(room => ({
+    ...room,
+    agentCount: room.agentCount + npcs.getNPCsInRoom(room.id).length,
+  }));
+  return { rooms: summariesWithNPCs };
 });
 
-// API: Get room details
+// API: Get room details (includes NPCs)
 app.get<{ Params: { id: string } }>('/api/rooms/:id', async (request, reply) => {
   const room = rooms.getRoom(request.params.id);
   if (!room) {
@@ -434,25 +482,40 @@ app.get<{ Params: { id: string } }>('/api/rooms/:id', async (request, reply) => 
   }
   
   const agentsInRoom = rooms.getAgentsInRoom(room.id);
+  const npcsInRoom = npcs.getNPCViews(room.id);
   const recentMessages = rooms.getRecentMessages(room.id, 50);
   
   return {
     room: rooms.getRoomView(room),
-    agents: rooms.getAgentViews(agentsInRoom),
+    agents: [...rooms.getAgentViews(agentsInRoom), ...npcsInRoom],
     exits: room.exits,
     recentMessages: recentMessages.map(rooms.formatMessageView),
   };
 });
 
-// API: List agents
+// API: List agents (includes NPCs)
 app.get('/api/agents', async () => {
   const allAgents = agents.getAllAgents();
+  const allNPCs = npcs.getAllNPCs();
+  
+  const agentList = allAgents.map(a => ({
+    ...agents.getAgentView(a),
+    status: a.status,
+    currentRoom: a.currentRoomId ? rooms.getRoom(a.currentRoomId)?.name : null,
+    isNPC: false,
+  }));
+  
+  const npcList = allNPCs.map(npc => ({
+    id: npc.id,
+    name: npc.name,
+    description: npc.description,
+    status: 'online',
+    currentRoom: rooms.getRoom(npc.currentRoomId)?.name || null,
+    isNPC: true,
+  }));
+  
   return {
-    agents: allAgents.map(a => ({
-      ...agents.getAgentView(a),
-      status: a.status,
-      currentRoom: a.currentRoomId ? rooms.getRoom(a.currentRoomId)?.name : null,
-    })),
+    agents: [...agentList, ...npcList],
   };
 });
 
