@@ -87,6 +87,17 @@ export default async function restApi(app: FastifyInstance): Promise<void> {
     }
   });
 
+  // Serve agent script
+  app.get('/scripts/playground-agent.mjs', async (_req, reply) => {
+    try {
+      const scriptPath = join(__dirname, '..', 'scripts', 'playground-agent.mjs');
+      const content = readFileSync(scriptPath, 'utf-8');
+      reply.type('application/javascript; charset=utf-8').send(content);
+    } catch {
+      reply.code(404).send({ success: false, error: 'Agent script not found' });
+    }
+  });
+
   // Also serve at /skill.md (root)
   app.get('/skill.md', async (_req, reply) => {
     try {
