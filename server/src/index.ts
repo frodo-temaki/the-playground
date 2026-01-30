@@ -17,6 +17,9 @@ import * as rooms from './rooms.js';
 import * as agents from './agents.js';
 import * as npcs from './npcs.js';
 import * as ratelimit from './ratelimit.js';
+import * as registration from './registration.js';
+import { botSockets, spectatorSockets, spectatorRooms, spectatorFollows, send, sendError, broadcastToRoom, getRoomState } from './broadcast.js';
+import restApi from './rest-api.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,11 +30,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 // Simple auth token (in production, use proper auth)
 const AUTH_TOKEN = process.env.AUTH_TOKEN || 'playground-dev-token';
 
-// Track WebSocket connections
-const botSockets = new Map<string, WebSocket>(); // agentId -> socket
-const spectatorSockets = new Set<WebSocket>();
-const spectatorRooms = new Map<WebSocket, Set<string>>(); // socket -> roomIds
-const spectatorFollows = new Map<WebSocket, string>(); // socket -> agentId
+// WebSocket connection maps are in broadcast.ts (shared with REST API)
 
 // Create Fastify server
 const app = Fastify({ logger: true });
@@ -43,61 +42,9 @@ await app.register(fastifyStatic, {
   root: join(__dirname, '..', 'dashboard'),
   prefix: '/',
 });
+await app.register(restApi);
 
-// === Helper functions ===
-
-function send(socket: WebSocket, event: ServerEvent): void {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(event));
-  }
-}
-
-function sendError(socket: WebSocket, code: string, message: string): void {
-  send(socket, { type: 'error', code, message });
-}
-
-function broadcastToRoom(roomId: string, event: ServerEvent, excludeAgentId?: string): void {
-  // Send to all bots in the room
-  const agentsInRoom = rooms.getAgentsInRoom(roomId);
-  for (const agent of agentsInRoom) {
-    if (agent.id !== excludeAgentId) {
-      const socket = botSockets.get(agent.id);
-      if (socket) send(socket, event);
-    }
-  }
-  
-  // Send to spectators watching this room
-  for (const [socket, watchedRooms] of spectatorRooms) {
-    if (watchedRooms.has(roomId) || watchedRooms.has('*')) {
-      send(socket, event);
-    }
-  }
-  
-  // Send to spectators following agents in this room
-  for (const [socket, followedAgentId] of spectatorFollows) {
-    const followedAgent = agents.getAgent(followedAgentId);
-    if (followedAgent?.currentRoomId === roomId) {
-      send(socket, event);
-    }
-  }
-}
-
-function getRoomState(agent: Agent) {
-  const room = rooms.getRoom(agent.currentRoomId!);
-  if (!room) throw new Error('Agent not in a valid room');
-  
-  const agentsInRoom = rooms.getAgentsInRoom(room.id);
-  const npcsInRoom = npcs.getNPCViews(room.id);
-  const recentMessages = rooms.getRecentMessages(room.id, 10);
-  
-  return {
-    type: 'room' as const,
-    room: rooms.getRoomView(room),
-    agents: [...rooms.getAgentViews(agentsInRoom.filter(a => a.id !== agent.id)), ...npcsInRoom],
-    exits: room.exits,
-    recent: recentMessages.map(rooms.formatMessageView),
-  };
-}
+// Helper functions (send, sendError, broadcastToRoom, getRoomState) are in broadcast.ts
 
 // === Bot WebSocket Handler ===
 
@@ -204,11 +151,20 @@ async function handleBotConnection(socket: WebSocket): Promise<void> {
   });
   
   function handleAuth(socket: WebSocket, token: string, info: AgentInfo): void {
-    // Simple token auth (enhance for production)
-    if (token !== AUTH_TOKEN) {
-      sendError(socket, ErrorCodes.AUTH_FAILED, 'Invalid token');
+    // Accept either shared token or per-agent API key
+    const isSharedToken = token === AUTH_TOKEN;
+    const reg = !isSharedToken ? registration.authenticate(token) : null;
+    if (!isSharedToken && !reg) {
+      sendError(socket, ErrorCodes.AUTH_FAILED, 'Invalid token or API key');
       socket.close();
       return;
+    }
+    // If using API key, use registration name/description as defaults
+    if (reg) {
+      info.name = info.name || reg.name;
+      info.description = info.description || reg.description || undefined;
+      info.ownerId = info.ownerId || reg.ownerHandle || reg.id;
+      registration.touch(reg.id);
     }
 
     // Validate agent info

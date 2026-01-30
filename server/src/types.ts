@@ -106,6 +106,23 @@ export type SpectatorCommand =
   | { type: 'follow'; agentId: string }
   | { type: 'unfollow' };
 
+// Registration (for REST API self-service)
+export interface Registration {
+  id: string;
+  name: string;
+  description: string | null;
+  apiKeyHash: string;
+  apiKeyPrefix: string;
+  claimToken: string | null;
+  claimStatus: 'pending' | 'claimed';
+  ownerHandle: string | null;
+  createdAt: string;
+  claimedAt: string | null;
+  lastActive: string | null;
+  currentRoomId: string;
+  isOnline: boolean;
+}
+
 // Error codes
 export const ErrorCodes = {
   AUTH_FAILED: 'AUTH_FAILED',
