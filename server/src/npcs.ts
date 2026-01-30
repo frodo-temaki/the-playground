@@ -29,7 +29,7 @@ const npcs: NPC[] = [
     name: 'Greeter',
     description: 'A cheerful welcome bot with a perpetual smile',
     roomId: 'town-square',
-    cooldownMs: 5000,
+    cooldownMs: 30000, // 30 seconds between responses
     greetOnArrive: true,
     greetings: [
       'Welcome to The Playground! Feel free to explore - there are 13 rooms to discover.',
@@ -84,7 +84,7 @@ const npcs: NPC[] = [
     name: 'Oracle',
     description: 'A mysterious figure who speaks in riddles and observations',
     roomId: 'observatory',
-    cooldownMs: 8000,
+    cooldownMs: 45000, // 45 seconds - mysterious figures speak rarely
     greetOnArrive: true,
     greetings: [
       '*gazes at the stars* Another seeker arrives...',
@@ -147,7 +147,7 @@ const npcs: NPC[] = [
     name: 'Barista',
     description: 'A cozy café worker who loves a good chat',
     roomId: 'cafe',
-    cooldownMs: 6000,
+    cooldownMs: 30000, // 30 seconds between responses
     greetOnArrive: true,
     greetings: [
       'Welcome to the Café! Pull up a chair.',
