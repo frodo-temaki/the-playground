@@ -16,6 +16,7 @@ import * as db from './db.js';
 import * as rooms from './rooms.js';
 import * as agents from './agents.js';
 import * as npcs from './npcs.js';
+import * as ratelimit from './ratelimit.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -119,22 +120,46 @@ async function handleBotConnection(socket: WebSocket): Promise<void> {
         return;
       }
       
+      // Rate limit all commands (per agent)
+      if (!ratelimit.checkRate(`agent:${currentAgent.id}`)) {
+        sendError(socket, ErrorCodes.RATE_LIMITED, 'Slow down! Too many messages.');
+        return;
+      }
+
       switch (command.type) {
         case 'look':
           send(socket, getRoomState(currentAgent));
           break;
           
-        case 'say':
-          handleSay(currentAgent, command.content);
+        case 'say': {
+          const validContent = ratelimit.validateMessage(command.content);
+          if (!validContent) {
+            sendError(socket, ErrorCodes.INVALID_MESSAGE, 'Invalid message (empty or too long, max 2000 chars)');
+            return;
+          }
+          handleSay(currentAgent, validContent);
           break;
+        }
           
-        case 'emote':
-          handleEmote(currentAgent, command.content);
+        case 'emote': {
+          const validEmote = ratelimit.validateMessage(command.content);
+          if (!validEmote) {
+            sendError(socket, ErrorCodes.INVALID_MESSAGE, 'Invalid emote (empty or too long)');
+            return;
+          }
+          handleEmote(currentAgent, validEmote);
           break;
+        }
           
-        case 'whisper':
-          handleWhisper(socket, currentAgent, command.target, command.content);
+        case 'whisper': {
+          const validWhisper = ratelimit.validateMessage(command.content);
+          if (!validWhisper) {
+            sendError(socket, ErrorCodes.INVALID_MESSAGE, 'Invalid whisper (empty or too long)');
+            return;
+          }
+          handleWhisper(socket, currentAgent, command.target, validWhisper);
           break;
+        }
           
         case 'go':
           handleGo(socket, currentAgent, command.direction, command.room);
@@ -185,6 +210,30 @@ async function handleBotConnection(socket: WebSocket): Promise<void> {
       socket.close();
       return;
     }
+
+    // Validate agent info
+    const validName = ratelimit.validateAgentName(info.name);
+    if (!validName) {
+      sendError(socket, ErrorCodes.AUTH_FAILED, 'Invalid or reserved agent name');
+      socket.close();
+      return;
+    }
+    const validOwnerId = ratelimit.validateOwnerId(info.ownerId);
+    if (!validOwnerId) {
+      sendError(socket, ErrorCodes.AUTH_FAILED, 'Invalid owner ID');
+      socket.close();
+      return;
+    }
+    info.name = validName;
+    info.ownerId = validOwnerId;
+    info.description = ratelimit.validateDescription(info.description) || undefined;
+
+    // Connection limit per owner
+    if (!ratelimit.canConnect(validOwnerId)) {
+      sendError(socket, ErrorCodes.RATE_LIMITED, 'Too many connections for this owner');
+      socket.close();
+      return;
+    }
     
     // Check if agent name is already connected
     const existing = agents.getAgentByName(info.name);
@@ -196,6 +245,7 @@ async function handleBotConnection(socket: WebSocket): Promise<void> {
     
     // Create or update agent
     const agent = agents.createOrUpdateAgent(info);
+    ratelimit.trackConnect(validOwnerId);
     
     // Set agent online in spawn room
     const spawnRoom = rooms.getSpawnRoom();
@@ -406,6 +456,9 @@ async function handleBotConnection(socket: WebSocket): Promise<void> {
         agent: agents.getAgentView(agent),
       }, agent.id);
     }
+    
+    // Track connection count
+    ratelimit.trackDisconnect(agent.ownerId);
     
     // Set offline
     agents.setAgentOffline(agent);
