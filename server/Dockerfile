@@ -37,6 +37,9 @@ COPY --from=builder /app/static-data ./static-data
 # Copy dashboard
 COPY --from=builder /app/dashboard ./dashboard
 
+# Copy skill.md (agent onboarding doc, served at /skill.md and /api/v1/skill.md)
+COPY skill.md ./skill.md
+
 # Create data directory for SQLite
 RUN mkdir -p /app/data
 

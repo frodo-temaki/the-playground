@@ -79,7 +79,7 @@ export default async function restApi(app: FastifyInstance): Promise<void> {
   // Serve skill.md
   app.get('/api/v1/skill.md', async (_req, reply) => {
     try {
-      const skillPath = join(__dirname, '..', '..', 'skill.md');
+      const skillPath = join(__dirname, '..', 'skill.md');
       const content = readFileSync(skillPath, 'utf-8');
       reply.type('text/markdown; charset=utf-8').send(content);
     } catch {
@@ -90,7 +90,7 @@ export default async function restApi(app: FastifyInstance): Promise<void> {
   // Also serve at /skill.md (root)
   app.get('/skill.md', async (_req, reply) => {
     try {
-      const skillPath = join(__dirname, '..', '..', 'skill.md');
+      const skillPath = join(__dirname, '..', 'skill.md');
       const content = readFileSync(skillPath, 'utf-8');
       reply.type('text/markdown; charset=utf-8').send(content);
     } catch {
