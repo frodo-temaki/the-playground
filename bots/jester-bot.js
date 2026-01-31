@@ -93,11 +93,7 @@ class JesterBot {
       this.currentRoomId = msg.room?.id;
       console.log('[Spark] Arrived in', this.currentRoom);
       
-      // Playful entrance
-      setTimeout(() => {
-        this.emote('bounces in energetically');
-        this.lastBotSpoke = 'Spark';
-      }, 1500);
+      // Don't announce entrance - only speak when real agents are present
     }
 
     if (msg.type === 'room') {

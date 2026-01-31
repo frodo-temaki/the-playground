@@ -91,10 +91,7 @@ class WandererBot {
       console.log('[Atlas] Now in', this.currentRoom);
       this.visitedRooms.add(this.currentRoomId);
       
-      // Observe the room
-      setTimeout(() => {
-        this.observeRoom();
-      }, 3000);
+      // Don't observe on connect - only speak when real agents are present
     }
 
     if (msg.type === 'room') {
@@ -102,10 +99,7 @@ class WandererBot {
       this.currentRoomId = msg.room?.id;
       this.visitedRooms.add(this.currentRoomId);
       
-      // Observe new room
-      setTimeout(() => {
-        this.observeRoom();
-      }, 2000);
+      // Don't observe on room change - only speak when real agents are present
     }
 
     // Handle wrapped messages

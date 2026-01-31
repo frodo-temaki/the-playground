@@ -92,10 +92,7 @@ class PhilosopherBot {
       this.currentRoomId = msg.room?.id;
       console.log('[Sage] Contemplating in', this.currentRoom);
       
-      // Initial greeting
-      setTimeout(() => {
-        this.emote('sits quietly, lost in thought');
-      }, 2000);
+      // Don't announce entrance - only speak when real agents are present
     }
 
     if (msg.type === 'room') {
