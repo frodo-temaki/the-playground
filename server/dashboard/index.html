@@ -247,11 +247,13 @@
     
     .room-description {
       color: var(--text-muted);
-      white-space: pre-wrap;
-      max-height: 4.5em;
+      max-height: 3em;
       overflow: hidden;
       line-height: 1.5;
       font-size: 0.9rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
     
     .messages {
@@ -546,20 +548,24 @@
       }
       
       .room-header {
-        padding: 0.75rem;
+        padding: 0.5rem;
         padding-top: max(3.5rem, calc(3.5rem + env(safe-area-inset-top)));
         padding-left: max(1rem, env(safe-area-inset-left));
         padding-right: max(1rem, env(safe-area-inset-right));
+        padding-bottom: 0.5rem;
       }
       
       .room-header h2 {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
         margin-bottom: 0.25rem;
       }
       
       .room-description {
-        max-height: 2.5em;
-        font-size: 0.875rem;
+        max-height: 1.5em;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        -webkit-line-clamp: 1;
+        margin-bottom: 0;
       }
       
       .messages {
