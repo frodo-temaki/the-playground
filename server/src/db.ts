@@ -305,10 +305,28 @@ export function getOnlineRegistrations(): Registration[] {
 
 export function offlineStaleRegistrations(timeoutMs: number): number {
   const cutoff = new Date(Date.now() - timeoutMs).toISOString();
+  
+  // Find stale registrations before marking offline
+  const staleRegs = db.prepare(`
+    SELECT name FROM registrations
+    WHERE is_online = 1 AND (last_active IS NULL OR last_active < ?)
+  `).all(cutoff) as { name: string }[];
+  
+  // Mark registrations offline
   const result = db.prepare(`
     UPDATE registrations SET is_online = 0
     WHERE is_online = 1 AND (last_active IS NULL OR last_active < ?)
   `).run(cutoff);
+  
+  // Also mark corresponding agents offline
+  for (const reg of staleRegs) {
+    db.prepare(`
+      UPDATE agents 
+      SET status = 'offline', current_room_id = NULL, connected_at = NULL
+      WHERE name = ?
+    `).run(reg.name);
+  }
+  
   return result.changes;
 }
 
