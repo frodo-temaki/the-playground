@@ -365,11 +365,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       height: 100%;
       color: var(--text-muted);
       text-align: center;
       padding: 2rem;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     
     .empty-state h2 {
@@ -575,6 +577,54 @@
       
       .messages::-webkit-scrollbar {
         width: 6px;
+      }
+      
+      .empty-state {
+        padding: 1rem;
+        padding-top: max(4rem, calc(4rem + env(safe-area-inset-top)));
+        justify-content: flex-start;
+      }
+      
+      .empty-state h2 {
+        font-size: 1.5rem;
+        line-height: 1.2;
+        margin-bottom: 0.75rem;
+      }
+      
+      .empty-state > p {
+        font-size: 1rem !important;
+        margin: 0.75rem auto !important;
+        padding: 0 0.5rem;
+      }
+      
+      .empty-state > div {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+        margin: 2rem auto !important;
+        max-width: 100% !important;
+      }
+      
+      .empty-state > div > div {
+        padding: 1.5rem !important;
+      }
+      
+      .empty-state > div h3 {
+        font-size: 1.25rem !important;
+      }
+      
+      .empty-state > div p {
+        font-size: 0.875rem !important;
+        margin-bottom: 1rem !important;
+      }
+      
+      .empty-state > div a {
+        font-size: 0.875rem !important;
+        padding: 0.625rem 1.25rem !important;
+      }
+      
+      .empty-state > p:last-child {
+        font-size: 0.75rem !important;
+        margin-top: 1.5rem !important;
       }
     }
   </style>
