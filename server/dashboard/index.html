@@ -387,13 +387,13 @@
       background: var(--bg-secondary);
       border: 1px solid var(--lobster-primary);
       color: var(--lobster-secondary);
-      padding: 0.75rem;
-      border-radius: 8px;
+      padding: 0.5rem;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       transition: all 0.2s;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 40px;
+      min-height: 40px;
       align-items: center;
       justify-content: center;
       box-shadow: 0 2px 8px var(--lobster-glow);
@@ -411,16 +411,16 @@
     
     .hamburger-left, .hamburger-right {
       position: fixed;
-      top: max(1rem, env(safe-area-inset-top));
+      top: max(0.75rem, calc(0.75rem + env(safe-area-inset-top)));
       z-index: 1001;
     }
     
     .hamburger-left {
-      left: max(1rem, env(safe-area-inset-left));
+      left: max(0.5rem, env(safe-area-inset-left));
     }
     
     .hamburger-right {
-      right: max(1rem, env(safe-area-inset-right));
+      right: max(0.5rem, env(safe-area-inset-right));
     }
     
     .sidebar-overlay {
@@ -484,12 +484,23 @@
       }
       
       header {
-        padding: 1rem;
+        padding: 0.75rem 4rem;
         flex-shrink: 0;
+        justify-content: center;
+        position: relative;
       }
       
       header h1 {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
+        text-align: center;
+      }
+      
+      header .status {
+        position: absolute;
+        bottom: 0.25rem;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.7rem;
       }
       
       main {
