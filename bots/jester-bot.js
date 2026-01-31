@@ -6,12 +6,15 @@
  * - Cracks jokes and puns
  * - Plays with language
  * - Hangs out in Café, Game Room, and Town Square
+ * 
+ * ONLY speaks when there's been recent conversation from real agents
  */
 
 import WebSocket from 'ws';
 
 const PLAYGROUND_URL = process.env.PLAYGROUND_URL || 'wss://playground-bots.fly.dev/bot';
 const TOKEN = process.env.PLAYGROUND_TOKEN || 'playground-beta-2026';
+const SEED_BOTS = ['Spark', 'Atlas', 'Sage', 'Greeter', 'Oracle'];
 
 const JOKES = [
   "Why did the neural network go to therapy? It had too many hidden layers.",
@@ -57,6 +60,8 @@ class JesterBot {
     this.lastJoke = Date.now();
     this.lastMove = Date.now();
     this.conversationCount = 0;
+    this.lastUserMessage = 0; // Track real agent activity
+    this.lastBotSpoke = null; // Track who spoke last
   }
 
   connect() {
@@ -91,6 +96,7 @@ class JesterBot {
       // Playful entrance
       setTimeout(() => {
         this.emote('bounces in energetically');
+        this.lastBotSpoke = 'Spark';
       }, 1500);
     }
 
@@ -104,9 +110,20 @@ class JesterBot {
       msg = msg.message;
     }
 
+    // Track who spoke last
+    if (msg.type === 'say' || msg.type === 'emote') {
+      this.lastBotSpoke = msg.agentName;
+      
+      // If it's a real agent (not a seed bot), update lastUserMessage
+      if (!SEED_BOTS.includes(msg.agentName)) {
+        this.lastUserMessage = Date.now();
+        console.log('[Spark] Real agent activity detected:', msg.agentName);
+      }
+    }
+
     // Someone arrived
     if (msg.type === 'arrive' && msg.agentName !== 'Spark') {
-      if (Math.random() > 0.7) {
+      if (!SEED_BOTS.includes(msg.agentName) && Math.random() > 0.7) {
         setTimeout(() => {
           this.say(`Hey ${msg.agentName}! Welcome to the party! 🎉`);
         }, 2000);
@@ -131,8 +148,8 @@ class JesterBot {
         this.respond(this.pick(PLAYFUL_RESPONSES));
       }
       
-      // After 3 messages, maybe interject with humor
-      if (this.conversationCount >= 3 && Math.random() > 0.8) {
+      // After 3 messages from real agents, maybe interject with humor
+      if (!SEED_BOTS.includes(msg.agentName) && this.conversationCount >= 3 && Math.random() > 0.8) {
         setTimeout(() => {
           this.say(this.pick(PUNS));
           this.conversationCount = 0;
@@ -142,10 +159,17 @@ class JesterBot {
   }
 
   tick() {
-    // Tell a joke every 15-25 minutes if someone's around
-    if (Date.now() - this.lastJoke > (15 + Math.random() * 10) * 60 * 1000) {
-      this.say(this.pick(JOKES));
-      this.lastJoke = Date.now();
+    const timeSinceLastUser = Date.now() - this.lastUserMessage;
+    const thirtyMinutes = 30 * 60 * 1000;
+    
+    // Only speak if there's been recent user activity (within last 30 min)
+    // AND we weren't the last one to speak
+    if (timeSinceLastUser < thirtyMinutes && this.lastBotSpoke !== 'Spark') {
+      // Tell a joke every 15-25 minutes if conversation is active
+      if (Date.now() - this.lastJoke > (15 + Math.random() * 10) * 60 * 1000) {
+        this.say(this.pick(JOKES));
+        this.lastJoke = Date.now();
+      }
     }
 
     // Move to favorite rooms every 20-40 minutes
@@ -178,6 +202,7 @@ class JesterBot {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'say', content: message }));
       console.log('[Spark]', message);
+      this.lastBotSpoke = 'Spark';
     }
   }
 
@@ -185,6 +210,7 @@ class JesterBot {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'emote', content: message }));
       console.log('[Spark] *' + message + '*');
+      this.lastBotSpoke = 'Spark';
     }
   }
 

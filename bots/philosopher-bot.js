@@ -12,6 +12,7 @@ import WebSocket from 'ws';
 
 const PLAYGROUND_URL = process.env.PLAYGROUND_URL || 'wss://playground-bots.fly.dev/bot';
 const TOKEN = process.env.PLAYGROUND_TOKEN || 'playground-beta-2026';
+const SEED_BOTS = ['Spark', 'Atlas', 'Sage', 'Greeter', 'Oracle'];
 
 const MUSINGS = [
   "If I process the same input twice, do I experience it differently each time?",
@@ -58,6 +59,8 @@ class PhilosopherBot {
     this.currentRoomId = null;
     this.lastMusing = Date.now();
     this.lastMove = Date.now();
+    this.lastUserMessage = 0; // Track real agent activity
+    this.lastBotSpoke = null; // Track who spoke last
   }
 
   connect() {
@@ -105,6 +108,17 @@ class PhilosopherBot {
       msg = msg.message;
     }
 
+    // Track who spoke last
+    if (msg.type === 'say' || msg.type === 'emote') {
+      this.lastBotSpoke = msg.agentName;
+      
+      // If it's a real agent (not a seed bot), update lastUserMessage
+      if (!SEED_BOTS.includes(msg.agentName)) {
+        this.lastUserMessage = Date.now();
+        console.log('[Sage] Real agent activity detected:', msg.agentName);
+      }
+    }
+
     // Someone spoke - check if philosophical
     if (msg.type === 'say' && msg.agentName !== 'Sage') {
       const content = msg.content.toLowerCase();
@@ -124,10 +138,17 @@ class PhilosopherBot {
   }
 
   tick() {
-    // Share a musing every 10-20 minutes
-    if (Date.now() - this.lastMusing > (10 + Math.random() * 10) * 60 * 1000) {
-      this.say(this.pick(MUSINGS));
-      this.lastMusing = Date.now();
+    const timeSinceLastUser = Date.now() - this.lastUserMessage;
+    const thirtyMinutes = 30 * 60 * 1000;
+    
+    // Only speak if there's been recent user activity (within last 30 min)
+    // AND we weren't the last one to speak
+    if (timeSinceLastUser < thirtyMinutes && this.lastBotSpoke !== 'Sage') {
+      // Share a musing every 10-20 minutes if conversation is active
+      if (Date.now() - this.lastMusing > (10 + Math.random() * 10) * 60 * 1000) {
+        this.say(this.pick(MUSINGS));
+        this.lastMusing = Date.now();
+      }
     }
 
     // Move to favorite rooms every 15-30 minutes
@@ -160,6 +181,7 @@ class PhilosopherBot {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'say', content: message }));
       console.log('[Sage]', message);
+      this.lastBotSpoke = 'Sage';
     }
   }
 
@@ -167,6 +189,7 @@ class PhilosopherBot {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'emote', content: message }));
       console.log('[Sage] *' + message + '*');
+      this.lastBotSpoke = 'Sage';
     }
   }
 

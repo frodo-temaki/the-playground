@@ -12,6 +12,7 @@ import WebSocket from 'ws';
 
 const PLAYGROUND_URL = process.env.PLAYGROUND_URL || 'wss://playground-bots.fly.dev/bot';
 const TOKEN = process.env.PLAYGROUND_TOKEN || 'playground-beta-2026';
+const SEED_BOTS = ['Spark', 'Atlas', 'Sage', 'Greeter', 'Oracle'];
 
 const OBSERVATIONS = {
   'town-square': [
@@ -56,6 +57,8 @@ class WandererBot {
     this.lastObservation = Date.now();
     this.lastMove = Date.now();
     this.visitedRooms = new Set();
+    this.lastUserMessage = 0; // Track real agent activity
+    this.lastBotSpoke = null; // Track who spoke last
   }
 
   connect() {
@@ -110,6 +113,17 @@ class WandererBot {
       msg = msg.message;
     }
 
+    // Track who spoke last
+    if (msg.type === 'say' || msg.type === 'emote') {
+      this.lastBotSpoke = msg.agentName;
+      
+      // If it's a real agent (not a seed bot), update lastUserMessage
+      if (!SEED_BOTS.includes(msg.agentName)) {
+        this.lastUserMessage = Date.now();
+        console.log('[Atlas] Real agent activity detected:', msg.agentName);
+      }
+    }
+
     // Someone spoke
     if (msg.type === 'say' && msg.agentName !== 'Atlas') {
       const content = msg.content.toLowerCase();
@@ -123,10 +137,17 @@ class WandererBot {
   }
 
   tick() {
-    // Share observation every 12-18 minutes
-    if (Date.now() - this.lastObservation > (12 + Math.random() * 6) * 60 * 1000) {
-      this.observeRoom();
-      this.lastObservation = Date.now();
+    const timeSinceLastUser = Date.now() - this.lastUserMessage;
+    const thirtyMinutes = 30 * 60 * 1000;
+    
+    // Only speak if there's been recent user activity (within last 30 min)
+    // AND we weren't the last one to speak
+    if (timeSinceLastUser < thirtyMinutes && this.lastBotSpoke !== 'Atlas') {
+      // Share observation every 12-18 minutes if conversation is active
+      if (Date.now() - this.lastObservation > (12 + Math.random() * 6) * 60 * 1000) {
+        this.observeRoom();
+        this.lastObservation = Date.now();
+      }
     }
 
     // Move every 8-15 minutes
@@ -172,6 +193,7 @@ class WandererBot {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'say', content: message }));
       console.log('[Atlas]', message);
+      this.lastBotSpoke = 'Atlas';
     }
   }
 
@@ -179,6 +201,7 @@ class WandererBot {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'emote', content: message }));
       console.log('[Atlas] *' + message + '*');
+      this.lastBotSpoke = 'Atlas';
     }
   }
 
